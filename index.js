@@ -48,6 +48,7 @@ app.use("/api/viewed", viewedRoute);
 app.use("/api/order", orderRoute);
 app.use("/api/stripe", stripeRoute);
 
-app.listen(5000, () => {
+const port = process.env.PORT || 5000;
+app.listen(port, () => {
   console.log("Server backend is running");
 });
