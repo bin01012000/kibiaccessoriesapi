@@ -1,4 +1,5 @@
 const Category = require("../models/Category");
+const Product = require("../models/Product");
 const {
   verifyToken,
   verifyTokenAndAuthorization,
@@ -21,10 +22,22 @@ router.post("/", verifyTokenAndStaff, async (req, res) => {
 });
 
 //DELETE - ONLY ADMIN AND STAFF
-router.delete("/:id", verifyTokenAndStaff, async (req, res) => {
+// router.delete("/:id", verifyTokenAndStaff, async (req, res) => {
+//   try {
+//     await Category.findByIdAndDelete(req.params.id);
+//     res.status(200).json("Category has been deleted...");
+//   } catch (err) {
+//     res.status(500).json(err);
+//   }
+// });
+
+//UPDATE - ONLY ADMIN AND STAFF
+router.patch("/:id", verifyTokenAndStaff, async (req, res) => {
   try {
-    await Category.findByIdAndDelete(req.params.id);
-    res.status(200).json("Category has been deleted...");
+    await Category.findByIdAndUpdate(req.params.id, {
+      category: req.body.category,
+    });
+    res.status(200).json("Category has been updated...");
   } catch (err) {
     res.status(500).json(err);
   }
@@ -55,6 +68,17 @@ router.get("/", async (req, res) => {
     });
   } catch (err) {
     res.status(500).json(err);
+  }
+});
+
+//DELETE
+router.delete("/delete/:id", verifyTokenAndAdmin, async (req, res) => {
+  try {
+    await Product.deleteMany({ category: req.params.id });
+    await Category.findByIdAndDelete(req.params.id);
+    res.status(200).json("Delete category and all product related success");
+  } catch (error) {
+    res.status(500).json(error);
   }
 });
 

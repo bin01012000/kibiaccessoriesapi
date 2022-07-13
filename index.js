@@ -10,9 +10,11 @@ const authRoute = require("./routes/auth");
 const productRoute = require("./routes/product");
 const brandRoute = require("./routes/brand");
 const categoryRoute = require("./routes/category");
+const categoryBlogRoute = require("./routes/categoryblog");
 const cartRoute = require("./routes/cart");
 const userRoute = require("./routes/user");
 const customerRoute = require("./routes/customer");
+const staffRoute = require("./routes/staff");
 const wishlistRoute = require("./routes/wishlist");
 const addressRoute = require("./routes/address");
 const commentRoute = require("./routes/comment");
@@ -21,6 +23,8 @@ const orderRoute = require("./routes/order");
 const stripeRoute = require("./routes/stripe");
 const momoRoute = require("./routes/momo");
 const voucherRoute = require("./routes/voucher");
+const blogRoute = require("./routes/blog");
+const branchRoute = require("./routes/branch");
 
 const monitorOrders = require("./triggers/ChangeStreamOrder");
 const monitorProduct = require("./triggers/ChangeStreamProduct");
@@ -44,6 +48,7 @@ app.use("/api/category", categoryRoute);
 app.use("/api/cart", cartRoute);
 app.use("/api/user", userRoute);
 app.use("/api/customer", customerRoute);
+app.use("/api/staff", staffRoute);
 app.use("/api/wishlist", wishlistRoute);
 app.use("/api/address", addressRoute);
 app.use("/api/comment", commentRoute);
@@ -52,40 +57,12 @@ app.use("/api/order", orderRoute);
 app.use("/api/stripe", stripeRoute);
 app.use("/api/momo", momoRoute);
 app.use("/api/voucher", voucherRoute);
-
+app.use("/api/categoryblog", categoryBlogRoute);
+app.use("/api/blog", blogRoute);
+app.use("/api/branch", branchRoute);
 //TRIGGER
 
 const port = process.env.PORT || 5000;
 app.listen(port, () => {
   console.log("Server backend is running");
-});
-
-const socketIo = require("socket.io")(server, {
-  cors: {
-    origin: "*",
-  },
-});
-var roomno = 1;
-socketIo.on("connection", (socket) => {
-  console.log("New client connected" + socket.id);
-
-  socket.join("room-" + roomno);
-  socket
-    .in("room-" + roomno)
-    .emit("connectToRoom", "You are in room no. " + roomno);
-  socket.on("connect", function (socket) {
-    socket.emit("B", somethingElse);
-  });
-
-  socket.on("sendDataClient", function (data) {
-    socketIo.emit("sendDataServer", { data });
-  });
-
-  socket.on("disconnect", () => {
-    console.log("Client disconnected");
-  });
-});
-
-server.listen(9000, () => {
-  console.log("Server đang chay tren cong 9000");
 });

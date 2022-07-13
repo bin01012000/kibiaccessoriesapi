@@ -1,10 +1,14 @@
 const router = require("express").Router();
-const { verifyTokenAndStaff } = require("./verifyToken");
+const {
+  verifyTokenAndStaff,
+  verifyTokenAndProductStaff,
+  verifyTokenAndAdmin,
+} = require("./verifyToken");
 const Product = require("../models/Product");
 const { Query } = require("mongoose");
 
 //CREATE
-router.post("/", verifyTokenAndStaff, async (req, res) => {
+router.post("/", verifyTokenAndProductStaff, async (req, res) => {
   const newProduct = new Product(req.body);
 
   try {
@@ -16,7 +20,7 @@ router.post("/", verifyTokenAndStaff, async (req, res) => {
 });
 
 //UPDATE - ONLY ADMIN AND STAFF
-router.put("/update/:id", verifyTokenAndStaff, async (req, res) => {
+router.put("/update/:id", verifyTokenAndProductStaff, async (req, res) => {
   try {
     const updatedProduct = await Product.findByIdAndUpdate(
       req.params.id,
@@ -31,11 +35,12 @@ router.put("/update/:id", verifyTokenAndStaff, async (req, res) => {
   }
 });
 
-//DELETE - ONLY ADMIN AND STAFF
-router.delete("/:id", verifyTokenAndStaff, async (req, res) => {
+//DELETE - ONLY ADMIN
+router.delete("/:id", verifyTokenAndAdmin, async (req, res) => {
   try {
     await Product.findByIdAndDelete(req.params.id);
     res.status(200).json("Product has been deleted...");
+    await Wishlist.deleteMany({ product: [{ _id: req.body.productId }] });
   } catch (err) {
     res.status(500).json(err);
   }
@@ -64,9 +69,9 @@ router.get("/", async (req, res) => {
     query = { ...query, ...{ brand: qBrand } };
   }
   if (qRating) {
-    query = { ...query, ...{ totalRating: parseInt(qRating) } };
+    query = { ...query, ...{ avgRating: { $gt: parseInt(qRating) } } };
   }
-  console.log("query:", query);
+
   try {
     let products;
     products = await Product.find(query)
@@ -107,12 +112,12 @@ router.get("/:idCate", async (req, res) => {
     query = { ...query, ...{ brand: qBrand } };
   }
   if (qRating) {
-    query = { ...query, ...{ totalRating: parseInt(qRating) } };
+    query = { ...query, ...{ avgRating: { $gt: parseInt(qRating) } } };
   }
 
   query = { ...query, ...{ category: req.params.idCate } };
-  console.log("qFromPrice:", qFromPrice);
-  console.log("query:", query);
+  // console.log("qFromPrice:", qFromPrice);
+  // console.log("query:", query);
   try {
     let products;
     if (qPage) {
@@ -137,19 +142,40 @@ router.get("/:idCate", async (req, res) => {
 //GET PRODUCT BY BRAND
 router.get("/brand/:idBrand", async (req, res) => {
   const qPage = req.query.page;
+  const qName = req.query.name;
+  const qBrand = req.query.brand;
+  const qFromPrice = req.query.fromPrice;
+  const qToPrice = req.query.toPrice;
+  const qRating = req.query.rating;
   let perPage = 10; // số lượng sản phẩm xuất hiện trên 1 page
   let page = qPage || 1;
   let count = 0;
+
+  let query = qName ? { product: { $regex: qName, $options: "i" } } : {};
+  if (qFromPrice && qToPrice) {
+    query = {
+      ...query,
+      ...{ price: { $gte: parseInt(qFromPrice), $lte: parseInt(qToPrice) } },
+    };
+  }
+  if (qBrand) {
+    query = { ...query, ...{ brand: qBrand } };
+  }
+  if (qRating) {
+    query = { ...query, ...{ avgRating: { $gt: parseInt(qRating) } } };
+  }
+
+  query = { ...query, ...{ brand: req.params.idBrand } };
   try {
     let products;
     if (qPage) {
-      products = await Product.find({ brand: req.params.idBrand })
+      products = await Product.find(query)
         .skip(perPage * page - perPage)
         .limit(perPage);
     } else {
-      products = await Product.find({ brand: req.params.idBrand });
+      products = await Product.find(query);
     }
-    count = await Product.count();
+    count = await Product.find(query).count();
     res.status(200).json({
       products, // sản phẩm trên một page
       currentPage: page, // page hiện tại
@@ -193,4 +219,26 @@ router.get("/get/:id", async (req, res) => {
   }
 });
 
+//GET AMOUNT PRODUCT BY BRAND -> DETAIL
+// router.get("/brand/:id", async (req, res) => {
+//   const productRelated = await Product.find({
+//     brand : req.params.id
+//   }).count();
+//   try {
+//     res.status(200).json(productRelated);
+//   } catch (error) {
+//     res.status(500).json(error);
+//   }
+// });
+//GET AMOUNT PRODUCT BY category -> DETAIL
+router.get("/category/:id", async (req, res) => {
+  const productRelated = await Product.find({
+    category: req.params.id,
+  }).count();
+  try {
+    res.status(200).json(productRelated);
+  } catch (error) {
+    res.status(500).json(error);
+  }
+});
 module.exports = router;

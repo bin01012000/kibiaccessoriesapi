@@ -8,15 +8,14 @@ const verifyToken = (req, res, next) => {
     jwt.verify(token, process.env.VUONG_SEC_PASS, (err, user) => {
       if (err) res.status(403).json("Token is not valid!");
       req.user = user;
-
       next();
     });
   } else {
     return res.status(401).json("You are not authenticated!");
   }
 };
-
 const verifyTokenAndAuthorization = (req, res, next) => {
+
   verifyToken(req, res, () => {
     if (
       req.user.type === "customer" ||
@@ -38,37 +37,45 @@ const verifyTokenAndStaff = (req, res, next) => {
     }
   });
 };
-
-const verifyTokenAndProductStaff = (req,res,next) => {
+const verifyTokenAndProductStaff = (req, res, next) => {
   verifyToken(req, res, () => {
-    if (req.user.type === "product_staff" || req.user.type === "admin") {
+    if (
+      (req.user.type === "staff" && req.user.role === "product") ||
+      req.user.type === "admin"
+    ) {
       next();
     } else {
       res.status(403).json("You are not alowed to do that!");
     }
   });
-}
-const verifyTokenAndBlogStaff = (req,res,next) => {
+};
+const verifyTokenAndBlogStaff = (req, res, next) => {
   verifyToken(req, res, () => {
-    if (req.user.type === "blog_staff" || req.user.type === "admin") {
+    if (
+      (req.user.type === "staff" && req.user.role === "blog") ||
+      req.user.type === "admin"
+    ) {
       next();
     } else {
       res.status(403).json("You are not alowed to do that!");
     }
   });
-}
-const verifyTokenAndOrderStaff = (req,res,next) => {
+};
+const verifyTokenAndOrderStaff = (req, res, next) => {
   verifyToken(req, res, () => {
-    if (req.user.type === "blog_staff" || req.user.type === "admin") {
+    if (
+      (req.user.type === "staff" && req.user.role === "order") ||
+      req.user.type === "admin"
+    ) {
       next();
     } else {
       res.status(403).json("You are not alowed to do that!");
     }
   });
-}
+};
 const verifyTokenAndAdmin = (req, res, next) => {
   verifyToken(req, res, () => {
-    if (req.role.type === "admin") {
+    if (req.user.type === "admin") {
       next();
     } else {
       res.status(403).json("You are not alowed to do that!");

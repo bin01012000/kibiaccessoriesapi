@@ -1,7 +1,6 @@
 const Brand = require("../models/Brand");
-const {
-  verifyTokenAndStaff,
-} = require("./verifyToken");
+const Product = require("../models/Product");
+const { verifyTokenAndStaff, verifyTokenAndAdmin } = require("./verifyToken");
 
 const router = require("express").Router();
 
@@ -44,5 +43,44 @@ router.get("/", async (req, res) => {
     res.status(500).json(err);
   }
 });
+
+//DELETE
+router.delete("/delete/:id", verifyTokenAndAdmin, async (req, res) => {
+  try {
+    await Product.deleteMany({ brand: req.params.id });
+    await Brand.findByIdAndDelete(req.params.id);
+    res.status(200).json("Delete brand and all product related success");
+  } catch (error) {
+    res.status(500).json(error);
+  }
+});
+
+router.get("/limit/:count", async (req, res) => {
+  try {
+    const brands = await Brand.find().limit(req.params.count);
+    res.status(200).json({
+      brands,
+    });
+  } catch (err) {
+    res.status(500).json(err);
+  }
+});
+
+//UPDATE
+router.put("/update/:id", verifyTokenAndAdmin, async (req, res) => {
+  try {
+    const updatedBrand = await Brand.findByIdAndUpdate(
+      req.params.id,
+      {
+        $set: req.body,
+      },
+      { new: true }
+    );
+    res.status(200).json(updatedBrand);
+  } catch (error) {
+    res.status(500).json(error);
+  }
+});
+
 
 module.exports = router;

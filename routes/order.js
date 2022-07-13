@@ -1,5 +1,8 @@
 const router = require("express").Router();
-const { verifyTokenAndAuthorization } = require("./verifyToken");
+const {
+  verifyTokenAndAuthorization,
+  verifyTokenAndStaff,
+} = require("./verifyToken");
 const Cart = require("../models/Cart");
 const Order = require("../models/Order");
 
@@ -20,6 +23,7 @@ router.post("/create", async (req, res) => {
     address: req.body.address,
     recipientName: req.body.recipientName,
     recipientPhone: req.body.recipientPhone,
+    shippingPrice: req.body.shippingPrice,
     status: "PENDING",
     paid: false,
   });
@@ -95,6 +99,8 @@ router.patch("/complete/:id", async (req, res) => {
   }
 });
 
+//GET ALL
+
 //GET ORDER BY STATUS
 router.get("/status/get", async (req, res) => {
   const qPage = req.query.page;
@@ -123,6 +129,12 @@ router.get("/status/get", async (req, res) => {
           .skip(perPage * page - perPage)
           .limit(perPage);
         count = await Order.find({ status: "COMPLETED" }).count();
+      }
+      if (qStatus === "CANCELLED") {
+        orders = await Order.find({ status: "CANCELLED" })
+          .skip(perPage * page - perPage)
+          .limit(perPage);
+        count = await Order.find({ status: "CANCELLED" }).count();
       }
     }
     res.status(200).json({
@@ -227,6 +239,43 @@ router.get("/customer/get/:username", async (req, res) => {
       totalPages: Math.ceil(count / perPage),
       totalItems: count,
     });
+  } catch (error) {
+    res.status(500).json(error);
+  }
+});
+
+//UPDATE STATUS -> CANCELLED
+router.post("/cancel", verifyTokenAndAuthorization, async (req, res) => {
+  try {
+    await Order.findByIdAndRemove(req.body.id);
+    res.status(200).json("Delete success");
+  } catch (error) {
+    res.status(500).json(error);
+  }
+});
+
+//GET ORDER LAST 7 DAY
+router.get("/chart", async (req, res) => {
+  try {
+    let d = new Date();
+    d.setDate(d.getDate() - 7);
+    const chart = await Order.aggregate([
+      // Only include the docs that have at least one passedModules element
+      // that passes the filter.
+      { $match: { createdAt: { $gt: d } } },
+      // Duplicate the docs, one per passedModules element
+      { $unwind: "$createdAt" },
+      // Filter again to remove the non-matching elements
+      { $match: { createdAt: { $gt: d } } },
+      {
+        $group: {
+          _id: { $dateToString: { format: "%d-%m-%Y", date: "$createdAt" } },
+          count: { $sum: 1 },
+        },
+      },
+      { $sort: { _id: -1 } },
+    ]);
+    res.status(200).json(chart);
   } catch (error) {
     res.status(500).json(error);
   }
