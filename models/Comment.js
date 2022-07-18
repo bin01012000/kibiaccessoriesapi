@@ -10,14 +10,18 @@ const Comment = new mongoose.Schema(
     avatar: { type: String },
     productImage: { type: String },
     productName: { type: String },
+    countLike: { type: Number },
+    userLiked: [
+      {
+        username: { type: String },
+      },
+    ],
     commentReply: [
       {
-        username: { type: String, required: true },
-        productId: { type: String, required: true },
+        username: { type: String },
         name: { type: String },
         avatar: { type: String },
-        productImage: { type: String },
-        productName: { type: String },
+        replyContent: { type: String },
       },
     ],
   },

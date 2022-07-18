@@ -25,9 +25,11 @@ const momoRoute = require("./routes/momo");
 const voucherRoute = require("./routes/voucher");
 const blogRoute = require("./routes/blog");
 const branchRoute = require("./routes/branch");
+const storageRoute = require("./routes/storage");
 
 const monitorOrders = require("./triggers/ChangeStreamOrder");
-const monitorProduct = require("./triggers/ChangeStreamProduct");
+const monitorStorageExport = require("./triggers/ChangeStreamStorageExport");
+const monitorStorageImport = require("./triggers/ChangeStreamStorageImport");
 dotenv.config();
 
 mongoose
@@ -35,7 +37,8 @@ mongoose
   .then(async () => {
     const client = mongoose.connection.client;
     await monitorOrders(client, 15000);
-    await monitorProduct(client);
+    await monitorStorageExport(client);
+    await monitorStorageImport(client);
   })
   .catch((err) => console.log(err));
 
@@ -60,6 +63,7 @@ app.use("/api/voucher", voucherRoute);
 app.use("/api/categoryblog", categoryBlogRoute);
 app.use("/api/blog", blogRoute);
 app.use("/api/branch", branchRoute);
+app.use("/api/storage", storageRoute);
 //TRIGGER
 
 const port = process.env.PORT || 5000;
