@@ -75,11 +75,11 @@ router.post("/edit/password", verifyTokenAndAuthorization, async (req, res) => {
   }
 });
 
-router.get("/exist/:username", async (req, res) => {
+router.get("/exist/:email", async (req, res) => {
   try {
     const userFound = await User.findOne({ username: req.params.email });
-
-    if (userFound) {
+    const emailFound = await User.findOne({ email: req.params.email });
+    if (userFound || emailFound) {
       return res.status(201).json("Exists");
     } else {
       try {

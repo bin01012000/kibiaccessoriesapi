@@ -65,6 +65,7 @@ router.post("/updateorder", async (req, res) => {
         recipientName: req.body.recipientName,
         recipientPhone: req.body.recipientPhone,
         shippingPrice: req.body.shippingPrice,
+        leadTime: req.body.leadTime,
         status: "PENDING",
         paid: true,
       });
@@ -75,6 +76,7 @@ router.post("/updateorder", async (req, res) => {
           jsonFormat.dataSuccess("Handle payment successfully", { newOrder })
         );
     } catch (e) {
+      console.log("errrrrrrorrrrrrrrrr", e);
       return res
         .status(400)
         .json(

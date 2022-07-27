@@ -247,6 +247,7 @@ router.get("/detail/get/:id", verifyTokenAndAuthorization, async (req, res) => {
       const orderFound = await Order.findById(req.params.id);
       res.status(200).json(orderFound);
     } catch (error) {
+      console.log(error);
       res.status(500).json(error);
     }
   } catch (error) {
@@ -339,6 +340,20 @@ router.get("/chart", async (req, res) => {
     }
   } catch (error) {
     res.status(504).json(error);
+  }
+});
+
+//GET DASHBOARD
+router.get("/dashboard", async (req, res) => {
+  try {
+    try {
+      const order = await Order.find().sort({ createdAt: -1 }).limit(4);
+      return res.status(200).json(order);
+    } catch (error) {
+      return res.status(500).json(error);
+    }
+  } catch (error) {
+    return res.status(504).json(error);
   }
 });
 

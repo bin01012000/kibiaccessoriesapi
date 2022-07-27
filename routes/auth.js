@@ -26,8 +26,14 @@ router.post("/register", async (req, res) => {
       city: req.body.city,
       type: req.body.type,
     });
-    const userFound = await User.findOne({ email: req.body.email });
-    if (userFound !== null && userFound !== undefined) {
+    const userFound = await User.findOne({ username: req.body.email });
+    const emailFound = await User.findOne({ email: req.body.email });
+    if (
+      userFound !== null &&
+      userFound !== undefined &&
+      emailFound !== null &&
+      emailFound !== undefined
+    ) {
       try {
         return res.status(201).json("Email already exist");
       } catch (error) {
@@ -81,7 +87,7 @@ router.post("/register", async (req, res) => {
 router.post("/login", async (req, res) => {
   try {
     try {
-      const user = await User.findOne({ email: req.body.email });
+      const user = await User.findOne({ username: req.body.email });
       if (!user) return res.status(401).json("Wrong credentials!");
 
       const hashedPassword = CryptoJS.AES.decrypt(
@@ -120,7 +126,7 @@ router.post("/login", async (req, res) => {
 // }
 router.post("/social-account", async (req, res) => {
   try {
-    const userFound = await User.findOne({ email: req.body.email });
+    const userFound = await User.findOne({ username: req.body.email });
 
     if (!userFound) {
       const newUserInfo = new User({
@@ -216,12 +222,50 @@ router.post("/social-account", async (req, res) => {
 router.get("/exist/:email", async (req, res) => {
   try {
     const emailFound = await User.findOne({ email: req.params.email });
+    const userFound = await User.findOne({ username: req.params.email });
     // console.log("userFound:", userFound);
-    if (emailFound) {
+    if (emailFound || userFound) {
       return res.status(201).json("Exists");
     } else {
       try {
         return res.status(200).json("No exists");
+      } catch (err) {
+        return res.status(500).json({ error: err });
+      }
+    }
+  } catch (error) {
+    res.status(504).json(error);
+  }
+});
+
+router.get("/existforgot/:email", async (req, res) => {
+  try {
+    const userFound = await User.findOne({ username: req.params.email });
+    if (userFound) {
+      if (userFound.isSocial === true) {
+        return res.status(202).json("Yes");
+      }
+      return res.status(201).json("Exists");
+    } else {
+      try {
+        return res.status(200).json("No exists");
+      } catch (err) {
+        return res.status(500).json({ error: err });
+      }
+    }
+  } catch (error) {
+    res.status(504).json(error);
+  }
+});
+
+router.get("/checksocial/:email", async (req, res) => {
+  try {
+    const userFound = await User.findOne({ username: req.params.email });
+    if (userFound && userFound.isSocial === true) {
+      return res.status(201).json("Yes");
+    } else {
+      try {
+        return res.status(200).json("No");
       } catch (err) {
         return res.status(500).json({ error: err });
       }

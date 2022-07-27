@@ -22,6 +22,7 @@ router.post("/payment", async (req, res) => {
       recipientName: req.body.recipientName,
       recipientPhone: req.body.recipientPhone,
       shippingPrice: req.body.shippingPrice,
+      leadTime: req.body.leadTime,
       status: "PENDING",
       paid: true,
     });
@@ -33,6 +34,7 @@ router.post("/payment", async (req, res) => {
       },
       async (stripeErr, stripeRes) => {
         if (stripeErr) {
+          console.log(stripeErr);
           res.status(500).json(stripeErr);
         } else {
           await newOrder.save();
